@@ -1,1 +1,1 @@
-"# personal-wordlist" 
+# personal-wordlist
