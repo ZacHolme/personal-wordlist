@@ -8,13 +8,30 @@ personalWordlist v0.1
 '''
 
 
-def profile() -> string:
+class Profile:
+    """All the victims personal info to shape the Wordlist"""
+    # Known personal info
+    firstname = str
+    lastname = str
+    house_number = int
+    address = str
+    # This could include any other unique data collected.
+    additonal_info = str
+
+
+def create_profile() -> string:
     """ This might as well be a class but for now I've just done a function boilerplate """
-    ...
-    return 0
+    new_profile = Profile()
+    new_profile.firstname = input('First Name: ')
+    new_profile.lastname = input('Last Name: ')
+    new_profile.house_number = input('House Number: ')
+    new_profile.address = input('Rest of Address (e.g. Preston Road)')
+    new_profile.additonal_info = input('Any other additional information: ')
+    return new_profile
 
 
-def gen_list(user) -> string:
+
+def gen_list(user: string) -> string:
     # function for generating wordlist
     ...
     return 0
@@ -22,7 +39,9 @@ def gen_list(user) -> string:
 
 def main() -> string:
     ...
-    gen_list(profile())
+    # gen_list(profile())
+    profile = create_profile()
+    print(profile.firstname)
     return 0
 
 
