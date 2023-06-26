@@ -1,18 +1,8 @@
-# Used for command line
-import sys
-import string
-
-'''
---------------------------------------------------------
-Created by Zach Holme
-personalWordlist v0.1
---------------------------------------------------------
-'''
-
 import sys
 import random
 import os
-from itertools import permutations
+import string
+from itertools import permutations, combinations
 import argparse
 
 
@@ -21,8 +11,7 @@ class Profile:
     # Known personal info
     firstname = str
     lastname = str
-    dob = str  # Changed data type to string for easier manipulation
-    house_number = int
+    dob = []  # Changed data type to list for date of birth parts
     city = str
     # This could include any other unique data collected. e.g. dog name, or unique id or code
     additional_info = []
@@ -32,8 +21,8 @@ class Profile:
         print('Victim\'s Details: ')
         self.firstname = input('First Name: ')
         self.lastname = input('Last Name: ')
-        self.dob = input('Date of Birth (DD/MM/YYYY): ')
-        self.house_number = input('House Number: ')
+        dob_input = input('Date of Birth (DD/MM/YYYY): ')
+        self.dob = dob_input.split('/')
         self.city = input('City: ')
         additional_info_input = input('Any other additional information (E.g. dog name): ')
         self.additional_info = [info.strip() for info in additional_info_input.split(',') if info.strip()]
@@ -42,20 +31,14 @@ class Profile:
 
 def generate_wordlist(profile: Profile, wordlist_type: int) -> list:
     wordlist = []
-    components = ['!', '@', '#', '$', '%', '&', '_', '123','1234']
+    components = ['!', '@', '#', '$', '%', '&', '_', '123', '1234']
     random.shuffle(components)
 
     firstname = profile.firstname
     lastname = profile.lastname
     dob = profile.dob
-    house_number = profile.house_number
     city = profile.city
     additional_info = profile.additional_info
-
-    dob_parts = dob.split('/')
-    day = dob_parts[0]
-    month = dob_parts[1]
-    year = dob_parts[2]
 
     if wordlist_type == 1:
         wordlist_length = 200
@@ -70,51 +53,61 @@ def generate_wordlist(profile: Profile, wordlist_type: int) -> list:
     attempts = 0
 
     while len(wordlist) < wordlist_length and len(wordlist) < 2000 and attempts < max_attempts:
-        random_component = random.choice(components)
-
         words = [
             firstname.lower(),
             firstname.title(),
             lastname.lower(),
             lastname.title(),
-            day,
-            month,
-            year,
-            year[-2:],
-            house_number,
             city.lower(),
             city.title()
         ]
 
-        for r in range(2, len(additional_info) + 1):
-            additional_info_perms = permutations(additional_info, r)
-            for perm in additional_info_perms:
-                words.append(''.join(perm).lower())
-                words.append(''.join(perm).title())
+        # Generate dob_parts without leading zeros
+        dob_parts = [
+            part.lstrip('0') + word
+            for part in dob
+            for word in random.sample(words, len(words) // 2)  # Use a subset of words to reduce frequency
+        ]
+        words.extend(dob_parts)
+
+        for r in range(2, min(len(additional_info) + 1, 4)):
+            additional_info_combinations = combinations(additional_info, r)
+            for combo in additional_info_combinations:
+                words.append(''.join(combo).lower())
+                words.append(''.join(combo).title())
 
         random.shuffle(words)
-        words.sort(key=lambda x: (len(x), x))
+
+        # Option 2: Avoid repeating passwords
+        used_passwords = set()
 
         for word in words:
-            password = word + random_component
-            if len(password) >= 6 and len(password) <= 14 and password not in wordlist:
-                wordlist.append(password)
-                if len(wordlist) == wordlist_length or len(wordlist) == 2000:
+            random_component = random.choice(components)  # Select a random component for each word
+            if any(char.isdigit() for char in word):  # Check if word contains a digit
+                password = word + random_component
+            else:
+                password = word[::-1] + random_component
+            if len(password) >= 6 and len(password) <= 14 and password not in used_passwords:
+                used_passwords.add(password)
+                if len(used_passwords) >= wordlist_length:
                     break
+
+        wordlist.extend(used_passwords)
 
         attempts += 1
 
     approx_passwords = len(wordlist) * (max_attempts // attempts)
 
-    passwords_without_numbers = [
-        password + random.choice(components)
-        for password in wordlist
-        if not any(char.isdigit() for char in password)
-    ]
-    wordlist.extend(passwords_without_numbers)
+    # Option 4: Incorporate word transformations
+    transformed_wordlist = []
+    for password in wordlist:
+        transformed_wordlist.append(password)
+        transformed_wordlist.append(password[::-1])
+        transformed_wordlist.append(password.replace('a', '4').replace('e', '3').replace('i', '1').replace('o', '0'))
 
-    random.shuffle(wordlist)
-    wordlist = wordlist[:wordlist_length]
+    # Option 5: Customization options
+    random.shuffle(transformed_wordlist)
+    wordlist = transformed_wordlist[:wordlist_length]
 
     return wordlist, approx_passwords
 
