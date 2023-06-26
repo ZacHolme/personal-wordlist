@@ -15,6 +15,6 @@ created from various input added.
 
 Further plans:
  - Fix bugs in code that can output various numbered passwords.
- - Allow for more variety and fix bug where some input isn't outputted properly (this may do to the rand() module added.
- - Build it out so it cater towards one line execution to allow easier one line code execution.
+ - Allow for more variety and fix bug where some input isn't outputted properly (this may do to the rand() module added: Edit - I have given the wordlist more variety now and fixed input not generating passwords issue.
+ - Build it out so it cater towards one line execution to allow easier one-line code execution.
  
