@@ -1,0 +1,40 @@
+---
+- name: Saving show tech command to a file
+  hosts: cisco_routers
+  gather_facts: no
+  connection: network_cli
+
+  vars:
+    output_folder: "/opt/semaphore/showtech_outputs"
+
+  tasks:
+    - name: Run 'show version'
+      ios_command:
+        commands: show version
+      register: version_output
+
+    - name: Extract serial number from show version
+      set_fact:
+        serial_number: "{{ version_output.stdout[0] | regex_search('System serial number\\s+:\\s+([Ff]\\w+)', '\\1') }}"
+
+    - name: Extract hostname from show version
+      set_fact:
+        hostname: "{{ version_output.stdout[0] | regex_search('^(\\S+) uptime is', '\\1') }}"
+
+    - name: Run 'show tech-support'
+      ios_command:
+        commands: show tech-support
+      register: show_tech
+
+    - name: Ensure output folder exists
+      local_action:
+        module: file
+        path: "{{ output_folder }}"
+        state: directory
+        mode: '0755'
+
+    - name: Save output to local file
+      local_action:
+        module: copy
+        content: "{{ show_tech.stdout[0] }}"
+        dest: "{{ output_folder }}/{{ serial_number }}_{{ hostname }}.txt"
